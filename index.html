@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>订阅账单体检 · 本地版</title>
+<style>
+:root {
+  --bg: #f4f6f7;
+  --card: #ffffff;
+  --ink: #16202b;
+  --ink-2: #4a5a68;
+  --ink-3: #7b8a97;
+  --line: #e2e8ec;
+  --accent: #0f766e;
+  --accent-soft: #e6f4f1;
+  --warn: #b45309;
+  --warn-soft: #fef3c7;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(16, 32, 43, .05), 0 6px 18px rgba(16, 32, 43, .04);
+}
+
+* { box-sizing: border-box; }
+
+/* 让 hidden 属性始终生效（否则会被 .field 的 display 覆盖） */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 14px 40px;
+}
+
+/* ---------- 顶部 ---------- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 2px 14px;
+}
+
+.top h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.3;
+  letter-spacing: .3px;
+}
+
+.top-sub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+
+.top-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid #cfe8e3;
+  border-radius: 999px;
+  padding: 3px 9px;
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
+.hint {
+  background: #fff8e6;
+  border: 1px solid #f6e2b3;
+  color: #7a5310;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.hint[hidden] { display: none; }
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 14px 16px;
+  margin-bottom: 14px;
+  min-width: 0;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.card-head h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: .3px;
+}
+
+.card-note {
+  margin: 6px 0 12px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 三个数字 ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  background: #f8fafb;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 10px 9px;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.stat-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-3);
+  margin-left: 2px;
+}
+
+.verdict {
+  margin: 12px 0 4px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  background: #f8fafb;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 子区块 ---------- */
+.sub-block {
+  margin-top: 16px;
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+  min-width: 0;
+}
+
+.sub-block[hidden] { display: none; }
+
+.block-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.block-title.warn { color: var(--warn); }
+.block-title.danger { color: var(--danger); }
+
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.plain-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  background: #fbfcfd;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 10px;
+  overflow-wrap: anywhere;
+}
+
+.plain-list li .li-main { min-width: 0; }
+.plain-list li .li-amt {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ink-2);
+}
+
+.zombie-line {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.money-red { color: var(--danger); }
+
+/* ---------- 排行 ---------- */
+.rank-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.rank-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  font-size: 13.5px;
+  min-width: 0;
+}
+
+.rank-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rank-amt {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.rank-bar {
+  grid-column: 1 / -1;
+  height: 5px;
+  background: #eef2f4;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.rank-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #0f766e, #2f9e93);
+  border-radius: 99px;
+}
+
+.rank-share {
+  grid-column: 1 / -1;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+/* ---------- 订阅列表 ---------- */
+.sub-list {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sub-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #fff;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sub-item.is-soon {
+  border-color: #f3d08a;
+  background: #fffdf6;
+}
+
+.sub-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.sub-name {
+  font-weight: 600;
+  font-size: 15.5px;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sub-sub {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.sub-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 16px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.sub-amount .unit {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.tag {
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2f4;
+  color: #41525f;
+  white-space: nowrap;
+}
+
+.tag.ok { background: #e7f6ee; color: #166534; }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+.tag.danger { background: var(--danger-soft); color: var(--danger); }
+.tag.mute { background: #f1f3f5; color: #6b7a86; }
+
+.sub-note {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  background: #fafbfc;
+  border-radius: 8px;
+  padding: 5px 8px;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  appearance: none;
+  border: 1px solid #d6dee4;
+  background: #fff;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .05s;
+}
+
+.btn:hover { background: #f6f9fa; border-color: #c3ced6; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.primary:hover { background: #0c655e; border-color: #0c655e; }
+
+.btn.danger-ghost { color: var(--danger); border-color: #e9c4c4; }
+.btn.danger-ghost:hover { background: #fdf3f3; }
+
+.btn.mini {
+  padding: 5px 9px;
+  font-size: 12.5px;
+  border-radius: 8px;
+}
+
+.icon-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+.icon-btn:hover { background: #f1f4f6; }
+
+/* ---------- 表单 ---------- */
+.field {
+  display: block;
+  margin-bottom: 11px;
+  min-width: 0;
+}
+
+.field-label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin-bottom: 4px;
+}
+
+.field-label em {
+  color: var(--danger);
+  font-style: normal;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  max-width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #d6dee4;
+  border-radius: 10px;
+  padding: 9px 10px;
+  line-height: 1.4;
+  appearance: none;
+}
+
+select {
+  background-image: linear-gradient(45deg, transparent 50%, #7b8a97 50%),
+    linear-gradient(135deg, #7b8a97 50%, transparent 50%);
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+}
+
+textarea { resize: vertical; min-height: 56px; }
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid rgba(15, 118, 110, .25);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field-row .field { margin-bottom: 11px; }
+
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  padding-top: 20px;
+}
+
+.check-field input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+.form-error {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--danger);
+  background: #fdf3f3;
+  border: 1px solid #f0cccc;
+  border-radius: 9px;
+  padding: 7px 10px;
+}
+
+.form-error[hidden] { display: none; }
+
+/* ---------- 话术 ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 11px;
+}
+
+.chip {
+  appearance: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid #d6dee4;
+  background: #fff;
+  color: var(--ink-2);
+  cursor: pointer;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: #9ed3cb;
+  color: #0b5c56;
+  font-weight: 600;
+}
+
+.script-box {
+  background: #f8fafb;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.script-text {
+  margin: 0;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 11px;
+}
+
+.copy-note {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.empty-line {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.empty-line[hidden] { display: none; }
+
+/* ---------- 弹窗 ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal[hidden] { display: none; }
+
+.modal-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 32, 43, .45);
+}
+
+.modal-panel {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 92vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 30px rgba(16, 32, 43, .18);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.modal-actions .btn { min-width: 84px; }
+
+/* ---------- 提示条 ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: rgba(22, 32, 43, .92);
+  color: #fff;
+  font-size: 13.5px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  z-index: 60;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.toast[hidden] { display: none; }
+
+/* ---------- 页脚 ---------- */
+.foot {
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 6px 8px 0;
+  overflow-wrap: anywhere;
+}
+
+.foot p { margin: 0; }
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 480px) {
+  /* 三个数字改成横排一行一个，长金额也不会挤成两行 */
+  .stats { grid-template-columns: 1fr; gap: 6px; }
+  .stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+  }
+  .stat-label { font-size: 12.5px; }
+  .stat-value { margin-top: 0; font-size: 19px; white-space: nowrap; }
+}
+
+@media (max-width: 420px) {
+  .wrap { padding: 12px 11px 34px; }
+  .top h1 { font-size: 20px; }
+  .stat-value { font-size: 18px; }
+  .card { padding: 12px 12px 14px; }
+  .sub-amount { font-size: 15px; }
+  .field-row { grid-template-columns: 1fr; gap: 0; }
+  .check-field { padding-top: 0; margin-bottom: 11px; }
+  .btn { padding: 8px 10px; font-size: 13px; }
+}
+
+@media (min-width: 560px) {
+  .modal { align-items: center; }
+  .modal-panel { border-radius: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="top-title">
+      <h1>订阅账单体检</h1>
+      <p class="top-sub">纯本地运行 · 不联网 · 数据只存在这台设备的浏览器里</p>
+    </div>
+    <div class="top-badge">localStorage</div>
+  </header>
+
+  <div class="hint" id="firstRunHint">
+    第一步：点下面的「载入示例」先看效果，或者直接「新增订阅」把你在扣费的会员录进来。
+  </div>
+
+  <!-- 体检总览 -->
+  <section class="card" aria-labelledby="h-check">
+    <div class="card-head">
+      <h2 id="h-check">体检总览</h2>
+      <span class="card-note">折算口径：月付＝金额；年付＝金额÷12；自定义 N 天＝金额÷(N÷30.44)</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">每月折算支出</div>
+        <div class="stat-value" id="statMonthly">¥0.00</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">每年总支出</div>
+        <div class="stat-value" id="statYearly">¥0.00</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">订阅总数</div>
+        <div class="stat-value" id="statCount">0<span class="stat-unit">个</span></div>
+      </div>
+    </div>
+
+    <p class="verdict" id="verdict">还没有记录，先添加一条订阅吧。</p>
+
+    <div class="sub-block" id="riskBlock" hidden>
+      <h3 class="block-title warn">7 天内即将扣费</h3>
+      <ul class="plain-list" id="riskList"></ul>
+    </div>
+
+    <div class="sub-block" id="zombieBlock" hidden>
+      <h3 class="block-title danger">僵尸订阅（很久没用还在扣钱）</h3>
+      <p class="zombie-line">
+        共 <b id="zombieCount">0</b> 个，一年合计白花
+        <b class="money-red" id="zombieWaste">¥0.00</b>
+      </p>
+      <ul class="plain-list" id="zombieList"></ul>
+    </div>
+
+    <div class="sub-block">
+      <h3 class="block-title">支出排行（按每月折算金额从高到低）</h3>
+      <ol class="rank-list" id="rankList"></ol>
+      <p class="empty-line" id="rankEmpty">暂无数据。</p>
+    </div>
+  </section>
+
+  <!-- 订阅台账 -->
+  <section class="card" aria-labelledby="h-ledger">
+    <div class="card-head">
+      <h2 id="h-ledger">订阅台账</h2>
+      <button type="button" class="btn primary" id="btnAdd">＋ 新增订阅</button>
+    </div>
+    <p class="card-note">7 天内要扣费的排在最前面，其余按每月折算金额从高到低。</p>
+    <div class="sub-list" id="subList"></div>
+    <p class="empty-line" id="emptyState">还没有订阅记录。点「新增订阅」，或去下面「数据管理」里载入示例。</p>
+  </section>
+
+  <!-- 话术生成 -->
+  <section class="card" aria-labelledby="h-script">
+    <div class="card-head">
+      <h2 id="h-script">申诉 / 协商话术</h2>
+    </div>
+    <p class="card-note">选一条订阅，挑一个模板，话术会自动带入订阅名、金额、扣费日期。复制内容与下方显示完全一致。</p>
+
+    <label class="field">
+      <span class="field-label">选择订阅</span>
+      <select id="scriptSelect"></select>
+    </label>
+
+    <div class="chips" id="tplChips" role="group" aria-label="话术模板"></div>
+
+    <div class="script-box">
+      <pre class="script-text" id="scriptText">先在「订阅台账」里添加订阅，再回到这里生成话术。</pre>
+    </div>
+
+    <div class="row">
+      <button type="button" class="btn primary" id="btnCopy" disabled>复制话术</button>
+      <span class="copy-note" id="copyNote">复制后直接粘到客服对话或邮件里。</span>
+    </div>
+  </section>
+
+  <!-- 数据管理 -->
+  <section class="card" aria-labelledby="h-data">
+    <div class="card-head">
+      <h2 id="h-data">数据管理</h2>
+    </div>
+    <p class="card-note">数据只存在本机浏览器（localStorage）。换电脑、清缓存前记得先导出 JSON 备份。</p>
+    <div class="row wrap">
+      <button type="button" class="btn" id="btnExportJson">导出 JSON 备份</button>
+      <button type="button" class="btn" id="btnImportJson">导入 JSON 备份</button>
+      <button type="button" class="btn" id="btnExportCsv">导出 CSV</button>
+      <button type="button" class="btn" id="btnSamples">载入示例</button>
+      <button type="button" class="btn danger-ghost" id="btnClear">清空全部</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json" hidden>
+  </section>
+
+  <footer class="foot">
+    <p>不登录任何账号 · 不自动取消订阅 · 不接支付 · 不联网同步。所有计算都在本页面完成。</p>
+  </footer>
+</div>
+
+<!-- 新增 / 编辑弹窗 -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-mask" data-close="1"></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h2 id="modalTitle">新增订阅</h2>
+      <button type="button" class="icon-btn" data-close="1" aria-label="关闭">×</button>
+    </div>
+    <form id="subForm" novalidate>
+      <label class="field">
+        <span class="field-label">订阅名称 <em>*</em></span>
+        <input type="text" id="f-name" maxlength="40" placeholder="例如：云音乐会员" autocomplete="off">
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">金额（元） <em>*</em></span>
+          <input type="number" id="f-amount" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+        </label>
+        <label class="field">
+          <span class="field-label">周期</span>
+          <select id="f-cycle">
+            <option value="month">月付</option>
+            <option value="year">年付</option>
+            <option value="custom">自定义天数</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field" id="daysWrap" hidden>
+        <span class="field-label">自定义周期天数（N 天扣一次）</span>
+        <input type="number" id="f-days" min="1" step="1" inputmode="numeric" placeholder="例如：90">
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">下次扣费日期 <em>*</em></span>
+          <input type="date" id="f-date">
+        </label>
+        <label class="field">
+          <span class="field-label">类别</span>
+          <select id="f-category">
+            <option>影音娱乐</option>
+            <option>工具效率</option>
+            <option>云存储</option>
+            <option>学习成长</option>
+            <option>健康运动</option>
+            <option>生活服务</option>
+            <option>其他</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">支付渠道</span>
+          <select id="f-channel">
+            <option>微信支付</option>
+            <option>支付宝</option>
+            <option>银行卡</option>
+            <option>Apple ID</option>
+            <option>应用商店</option>
+            <option>其他</option>
+          </select>
+        </label>
+        <label class="field check-field">
+          <input type="checkbox" id="f-auto" checked>
+          <span>自动续费</span>
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field-label">备注</span>
+        <textarea id="f-note" rows="2" maxlength="200" placeholder="例如：和室友共用的家庭组 / 学生认证价到期"></textarea>
+      </label>
+
+      <p class="form-error" id="formError" hidden></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close="1">取消</button>
+        <button type="submit" class="btn primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* 订阅账单体检 · 纯本地工具
+ * 逻辑分两层：纯函数（可被 Node 直接测试）+ 仅在浏览器里执行的界面层。
+ */
+(function (root, factory) {
+  var api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  root.SubCheckup = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  /* ============ 常量 ============ */
+  var STORAGE_KEY = 'subscription-checkup.v1';
+  var BACKUP_APP = 'subscription-checkup';
+  var BACKUP_VERSION = 1;
+  var DAYS_PER_MONTH = 30.44;
+  var ALERT_DAYS = 7;
+  var CYCLE_LABEL = { month: '月付', year: '年付', custom: '自定义天数' };
+
+  /* ============ 纯函数：数值与日期 ============ */
+  function toNum(v) {
+    var n = Number(v);
+    return isFinite(n) ? n : 0;
+  }
+
+  function pad2(n) {
+    return (n < 10 ? '0' : '') + n;
+  }
+
+  function todayStr(d) {
+    var x = d instanceof Date ? d : new Date();
+    return x.getFullYear() + '-' + pad2(x.getMonth() + 1) + '-' + pad2(x.getDate());
+  }
+
+  /** 把 YYYY-MM-DD 解析成 UTC 毫秒；非法日期返回 null。 */
+  function parseYMD(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s == null ? '' : s));
+    if (!m) return null;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    var t = Date.UTC(y, mo - 1, d);
+    var dt = new Date(t);
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+    return t;
+  }
+
+  function isValidYMD(s) {
+    return parseYMD(s) !== null;
+  }
+
+  function addDays(ymd, n) {
+    var t = parseYMD(ymd);
+    if (t === null) return '';
+    var d = new Date(t + toNum(n) * 86400000);
+    return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate());
+  }
+
+  /** 距离下次扣费还有几天：今天=0，明天=1，已过期=负数。 */
+  function daysUntil(dateStr, today) {
+    var a = parseYMD(dateStr);
+    var b = parseYMD(today || todayStr());
+    if (a === null || b === null) return null;
+    return Math.round((a - b) / 86400000);
+  }
+
+  function daysText(d) {
+    if (d === null) return '日期未填';
+    if (d === 0) return '今天扣费';
+    if (d === 1) return '明天扣费';
+    if (d > 1) return d + ' 天后扣费';
+    if (d === -1) return '已过期 1 天';
+    return '已过期 ' + (-d) + ' 天';
+  }
+
+  /** 括号里用的短写法，避免和「下次扣费」重复。 */
+  function daysShort(d) {
+    if (d === null) return '日期未填';
+    if (d === 0) return '今天';
+    if (d === 1) return '明天';
+    if (d > 1) return d + ' 天后';
+    return '已过期 ' + (-d) + ' 天';
+  }
+
+  /* ============ 纯函数：金额折算 ============ */
+  /** 每月折算金额：月付=金额；年付=金额/12；自定义 N 天=金额/(N/30.44)。 */
+  function monthlyOf(sub) {
+    var amount = toNum(sub && sub.amount);
+    var cycle = sub && sub.cycle;
+    if (cycle === 'year') return amount / 12;
+    if (cycle === 'custom') {
+      var days = toNum(sub.customDays);
+      if (!(days > 0)) return 0;
+      return amount / (days / DAYS_PER_MONTH);
+    }
+    return amount;
+  }
+
+  /** 每年折算金额 = 每月折算 × 12。 */
+  function yearlyOf(sub) {
+    return monthlyOf(sub) * 12;
+  }
+
+  function cycleText(sub) {
+    if (sub.cycle === 'custom') return '自定义 ' + toNum(sub.customDays) + ' 天';
+    return CYCLE_LABEL[sub.cycle] || '月付';
+  }
+
+  function round2(n) {
+    return Math.round((toNum(n) + Number.EPSILON) * 100) / 100;
+  }
+
+  function groupThousands(intStr) {
+    return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function fmtMoney(n) {
+    var v = round2(n);
+    var neg = v < 0;
+    v = Math.abs(v);
+    var s = v.toFixed(2).split('.');
+    return (neg ? '-' : '') + '¥' + groupThousands(s[0]) + '.' + s[1];
+  }
+
+  /* ============ 纯函数：统计 ============ */
+  function summarize(subs, today) {
+    var list = Array.isArray(subs) ? subs : [];
+    var monthly = 0;
+    var yearly = 0;
+    list.forEach(function (s) {
+      monthly += monthlyOf(s);
+      yearly += yearlyOf(s);
+    });
+    return {
+      count: list.length,
+      monthly: monthly,
+      yearly: yearly,
+      monthlyText: fmtMoney(monthly),
+      yearlyText: fmtMoney(yearly)
+    };
+  }
+
+  /** 按每月折算金额从高到低排序。 */
+  function sortByMonthly(subs) {
+    return (Array.isArray(subs) ? subs.slice() : []).sort(function (a, b) {
+      var d = monthlyOf(b) - monthlyOf(a);
+      if (d !== 0) return d;
+      return String(a.name).localeCompare(String(b.name), 'zh-Hans-CN');
+    });
+  }
+
+  /** 7 天内（含今天）即将扣费，按天数升序。 */
+  function upcoming(subs, today) {
+    var base = today || todayStr();
+    return (Array.isArray(subs) ? subs : [])
+      .map(function (s) {
+        return { sub: s, days: daysUntil(s.nextDate, base) };
+      })
+      .filter(function (x) {
+        return x.days !== null && x.days >= 0 && x.days <= ALERT_DAYS;
+      })
+      .sort(function (a, b) {
+        if (a.days !== b.days) return a.days - b.days;
+        return monthlyOf(b.sub) - monthlyOf(a.sub);
+      });
+  }
+
+  /** 僵尸订阅：手动标记「很久没用」的，统计一年合计浪费（各自年金额之和）。 */
+  function zombies(subs) {
+    var list = sortByMonthly((Array.isArray(subs) ? subs : []).filter(function (s) {
+      return !!s.unused;
+    }));
+    var waste = 0;
+    list.forEach(function (s) { waste += yearlyOf(s); });
+    return { list: list, count: list.length, yearlyWaste: waste, yearlyWasteText: fmtMoney(waste) };
+  }
+
+  /** 台账排序：7 天内扣费的置顶，其余按每月折算金额从高到低。 */
+  function ledgerOrder(subs, today) {
+    var base = today || todayStr();
+    return (Array.isArray(subs) ? subs : []).slice().sort(function (a, b) {
+      var da = daysUntil(a.nextDate, base);
+      var db = daysUntil(b.nextDate, base);
+      var sa = da !== null && da >= 0 && da <= ALERT_DAYS ? 0 : 1;
+      var sb = db !== null && db >= 0 && db <= ALERT_DAYS ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+      if (sa === 0 && da !== db) return da - db;
+      return monthlyOf(b) - monthlyOf(a);
+    });
+  }
+
+  /* ============ 纯函数：数据规范化 / 备份 / CSV ============ */
+  function uid() {
+    return 's_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function normalize(raw) {
+    var r = raw || {};
+    var cycle = r.cycle === 'year' || r.cycle === 'custom' ? r.cycle : 'month';
+    var days = cycle === 'custom' ? Math.max(1, Math.round(toNum(r.customDays) || 30)) : null;
+    return {
+      id: String(r.id || uid()),
+      name: String(r.name == null ? '' : r.name).trim(),
+      amount: Math.max(0, round2(toNum(r.amount))),
+      cycle: cycle,
+      customDays: days,
+      nextDate: isValidYMD(r.nextDate) ? String(r.nextDate) : '',
+      category: String(r.category || '其他').trim() || '其他',
+      channel: String(r.channel || '未填写').trim() || '未填写',
+      autoRenew: !!r.autoRenew,
+      unused: !!r.unused,
+      note: String(r.note == null ? '' : r.note).slice(0, 200),
+      createdAt: toNum(r.createdAt) || Date.now()
+    };
+  }
+
+  function buildBackup(subs, now) {
+    var payload = {
+      app: BACKUP_APP,
+      version: BACKUP_VERSION,
+      exportedAt: (now instanceof Date ? now : new Date()).toISOString(),
+      subscriptions: (Array.isArray(subs) ? subs : []).map(normalize)
+    };
+    return JSON.stringify(payload, null, 2);
+  }
+
+  function parseBackup(text) {
+    var data;
+    try {
+      data = JSON.parse(String(text == null ? '' : text));
+    } catch (e) {
+      return { ok: false, error: '这个文件不是合法的 JSON。' };
+    }
+    var arr = Array.isArray(data) ? data : (data && Array.isArray(data.subscriptions) ? data.subscriptions : null);
+    if (!arr) return { ok: false, error: '备份格式不对：找不到 subscriptions 数组。' };
+    var subs = arr.map(normalize).filter(function (s) { return s.name !== ''; });
+    if (!subs.length) return { ok: false, error: '备份里没有可用的订阅记录。' };
+    return { ok: true, subs: subs, count: subs.length };
+  }
+
+  function csvCell(v) {
+    var s = v == null ? '' : String(v);
+    if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function toCSV(subs) {
+    var head = ['名称', '金额', '周期', '自定义天数', '下次扣费日期', '月均支出', '年均支出',
+      '类别', '支付渠道', '自动续费', '很久没用', '备注'];
+    var rows = [head.map(csvCell).join(',')];
+    (Array.isArray(subs) ? subs : []).forEach(function (s) {
+      rows.push([
+        s.name,
+        round2(s.amount).toFixed(2),
+        cycleText(s),
+        s.cycle === 'custom' ? toNum(s.customDays) : '',
+        s.nextDate,
+        round2(monthlyOf(s)).toFixed(2),
+        round2(yearlyOf(s)).toFixed(2),
+        s.category,
+        s.channel,
+        s.autoRenew ? '是' : '否',
+        s.unused ? '是' : '否',
+        s.note
+      ].map(csvCell).join(','));
+    });
+    return '\ufeff' + rows.join('\r\n');
+  }
+
+  /* ============ 纯函数：话术 ============ */
+  var TEMPLATES = [
+    {
+      id: 'refund',
+      title: '自动续费未提醒 · 要求退款',
+      build: function (s) {
+        return [
+          '【争议点】',
+          '我的「' + s.name + '」订阅（' + cycleText(s) + '，' + fmtMoney(s.amount) + '）在 ' + (s.nextDate || '（日期待核对）') +
+            ' 被自动续费扣款。扣费之前我没有收到任何短信、邮件或站内提醒，也没有我本人确认续费的记录，这笔钱不是我主动支付的。',
+          '',
+          '【我的诉求】',
+          '1. 请将本次扣款 ' + fmtMoney(s.amount) + ' 全额原路退回；',
+          '2. 退款的同时关闭该订阅的自动续费，确保不会再次扣款；',
+          '3. 请在 3 个工作日内答复处理结果，并提供退款流水号。',
+          '',
+          '【补充说明】',
+          '如果贵方认为扣费前已经提醒过我，请提供提醒记录（发送时间、渠道、内容）。若无法提供，请按上述诉求处理。',
+          '',
+          '【提交前请核对】',
+          '订阅名称：' + s.name,
+          '扣费金额：' + fmtMoney(s.amount),
+          '扣费日期：' + (s.nextDate || '（未填）'),
+          '支付渠道：' + s.channel,
+          '以上信息如与实际账单不符，请先改好再发送。'
+        ].join('\n');
+      }
+    },
+    {
+      id: 'wrong',
+      title: '误扣申诉',
+      build: function (s) {
+        return [
+          '【争议点】',
+          '我在账单里发现一笔 ' + fmtMoney(s.amount) + ' 的扣款，商户/服务名显示为「' + s.name + '」，扣费日期是 ' +
+            (s.nextDate || '（日期待核对）') + '，支付渠道是' + s.channel + '。我没有购买过这项服务，也没有开通过这个订阅，怀疑是误扣或他人误操作。',
+          '',
+          '【我的诉求】',
+          '1. 请核查这笔 ' + fmtMoney(s.amount) + ' 扣款对应的订单号、下单时间与授权记录，并书面告知我；',
+          '2. 如果无法证明是我本人授权，请全额退款并解除该订阅，不要再产生后续扣费；',
+          '3. 请在 3 个工作日内答复，并确认已停止扣款。',
+          '',
+          '【补充说明】',
+          '在核实完成之前，请不要对该账号继续发起扣款；如需我提供账单截图，我可以配合提供。',
+          '',
+          '【提交前请核对】',
+          '订阅名称：' + s.name,
+          '扣费金额：' + fmtMoney(s.amount),
+          '扣费日期：' + (s.nextDate || '（未填）'),
+          '支付渠道：' + s.channel,
+          '以上信息如与实际账单不符，请先改好再发送。'
+        ].join('\n');
+      }
+    },
+    {
+      id: 'retention',
+      title: '降价挽留协商',
+      build: function (s) {
+        return [
+          '【争议点】',
+          '我是「' + s.name + '」的用户，目前是' + cycleText(s) + '，费用 ' + fmtMoney(s.amount) +
+            '，下次扣费日期是 ' + (s.nextDate || '（日期待核对）') + '。这个价格对我来说偏高，我在考虑到期后不再续费。',
+          '',
+          '【我的诉求】',
+          '1. 请在下次扣费（' + (s.nextDate || '（日期待核对）') + '）之前，给我一个更优惠的续费方案，例如年付折扣、老用户专属价或降级套餐；',
+          '2. 如果价格确实无法调整，请在我确认之前不要自动扣款，并告知我关闭自动续费的具体路径；',
+          '3. 请把可选方案和对应价格一次性列清楚，方便我直接决定。',
+          '',
+          '【补充说明】',
+          '我认可产品本身，只是希望价格与我的使用频率匹配；如果方案合适，我愿意继续续费。',
+          '',
+          '【提交前请核对】',
+          '订阅名称：' + s.name,
+          '当前金额：' + fmtMoney(s.amount),
+          '下次扣费：' + (s.nextDate || '（未填）'),
+          '支付渠道：' + s.channel,
+          '以上信息如与实际账单不符，请先改好再发送。'
+        ].join('\n');
+      }
+    }
+  ];
+
+  function templateById(id) {
+    for (var i = 0; i < TEMPLATES.length; i++) {
+      if (TEMPLATES[i].id === id) return TEMPLATES[i];
+    }
+    return TEMPLATES[0];
+  }
+
+  function buildScript(sub, templateId) {
+    if (!sub) return '';
+    var tpl = templateById(templateId);
+    return tpl.build(normalize(sub)).trim();
+  }
+
+  /* ============ 示例数据 ============ */
+  function sampleSubs(today) {
+    var base = today || todayStr();
+    return [
+      normalize({
+        name: '云音乐会员', amount: 15, cycle: 'month', nextDate: addDays(base, 3),
+        category: '影音娱乐', channel: '微信支付', autoRenew: true, unused: false,
+        note: '学生价，毕业后会涨价'
+      }),
+      normalize({
+        name: '网盘超级会员', amount: 298, cycle: 'year', nextDate: addDays(base, 120),
+        category: '云存储', channel: '支付宝', autoRenew: true, unused: true,
+        note: '一年只用了两次，纯粹忘了关'
+      }),
+      normalize({
+        name: '健身房月卡', amount: 199, cycle: 'month', nextDate: addDays(base, 18),
+        category: '健康运动', channel: '银行卡', autoRenew: false, unused: true,
+        note: '已经三个月没去了'
+      })
+    ];
+  }
+
+  /* ============ 浏览器界面层 ============ */
+  function boot() {
+    if (typeof document === 'undefined') return;
+
+    var $ = function (id) { return document.getElementById(id); };
+    var state = { subs: [], seeded: false };
+    var selectedId = null;
+    var currentTpl = 'refund';
+    var editingId = null;
+    var toastTimer = null;
+
+    /* ---- 存取 ---- */
+    function load() {
+      var raw = null;
+      try { raw = window.localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+      if (!raw) {
+        state = { subs: sampleSubs(), seeded: true };
+        save();
+        return;
+      }
+      try {
+        var data = JSON.parse(raw);
+        var arr = Array.isArray(data) ? data : (data && Array.isArray(data.subs) ? data.subs : []);
+        state = {
+          subs: arr.map(normalize),
+          seeded: !!(data && data.seeded)
+        };
+      } catch (e) {
+        state = { subs: [], seeded: true };
+      }
+    }
+
+    function save() {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          version: BACKUP_VERSION,
+          seeded: state.seeded,
+          subs: state.subs
+        }));
+      } catch (e) {
+        toast('保存失败：浏览器可能禁用了本地存储。');
+      }
+    }
+
+    function findSub(id) {
+      for (var i = 0; i < state.subs.length; i++) {
+        if (state.subs[i].id === id) return state.subs[i];
+      }
+      return null;
+    }
+
+    /* ---- 小工具 ---- */
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function toast(msg) {
+      var el = $('toast');
+      el.textContent = msg;
+      el.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { el.hidden = true; }, 2200);
+    }
+
+    function download(filename, content, mime) {
+      var blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    }
+
+    function copyText(text) {
+      function legacy() {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', 'readonly');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        return ok;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).then(function () { return true; })
+          .catch(function () { return legacy(); });
+      }
+      return Promise.resolve(legacy());
+    }
+
+    /* ---- 渲染：体检 ---- */
+    function renderCheck() {
+      var sum = summarize(state.subs);
+      $('statMonthly').textContent = sum.monthlyText;
+      $('statYearly').textContent = sum.yearlyText;
+      $('statCount').innerHTML = sum.count + '<span class="stat-unit">个</span>';
+
+      var soon = upcoming(state.subs);
+      var zom = zombies(state.subs);
+
+      var verdict = sum.count === 0
+        ? '还没有记录，先添加一条订阅吧。'
+        : '共 ' + sum.count + ' 个订阅，每月折算 ' + sum.monthlyText + '，一年 ' + sum.yearlyText +
+          (soon.length ? '；' + soon.length + ' 个将在 7 天内扣费。' : '；7 天内没有扣费。') +
+          (zom.count ? ' 另有 ' + zom.count + ' 个很久没用，一年白花 ' + zom.yearlyWasteText + '。' : '');
+      $('verdict').textContent = verdict;
+
+      // 7 天内扣费
+      $('riskBlock').hidden = soon.length === 0;
+      $('riskList').innerHTML = soon.map(function (x) {
+        return '<li><span class="li-main">' + esc(x.sub.name) + ' · ' + esc(daysText(x.days)) +
+          '</span><span class="li-amt">' + esc(fmtMoney(x.sub.amount)) + '</span></li>';
+      }).join('');
+
+      // 僵尸订阅
+      $('zombieBlock').hidden = zom.count === 0;
+      $('zombieCount').textContent = zom.count;
+      $('zombieWaste').textContent = zom.yearlyWasteText;
+      $('zombieList').innerHTML = zom.list.map(function (s) {
+        return '<li><span class="li-main">' + esc(s.name) + ' · ' + esc(cycleText(s)) +
+          '</span><span class="li-amt">一年 ' + esc(fmtMoney(yearlyOf(s))) + '</span></li>';
+      }).join('');
+
+      // 支出排行
+      var ranked = sortByMonthly(state.subs);
+      $('rankEmpty').hidden = ranked.length > 0;
+      var max = ranked.length ? monthlyOf(ranked[0]) : 0;
+      $('rankList').innerHTML = ranked.map(function (s, i) {
+        var m = monthlyOf(s);
+        var width = max > 0 ? Math.max(2, Math.round((m / max) * 100)) : 0;
+        var share = sum.monthly > 0 ? Math.round((m / sum.monthly) * 100) : 0;
+        return '<li class="rank-item">' +
+          '<span class="rank-name">' + (i + 1) + '. ' + esc(s.name) + '</span>' +
+          '<span class="rank-amt">' + esc(fmtMoney(m)) + '/月</span>' +
+          '<span class="rank-bar"><i style="width:' + width + '%"></i></span>' +
+          '<span class="rank-share">占月度总支出 ' + share + '% · 一年 ' + esc(fmtMoney(yearlyOf(s))) + '</span>' +
+          '</li>';
+      }).join('');
+    }
+
+    /* ---- 渲染：台账 ---- */
+    function renderList() {
+      var ordered = ledgerOrder(state.subs);
+      $('emptyState').hidden = ordered.length > 0;
+      $('subList').innerHTML = ordered.map(function (s) {
+        var d = daysUntil(s.nextDate);
+        var soon = d !== null && d >= 0 && d <= ALERT_DAYS;
+        var tags = [];
+        tags.push('<span class="tag">' + esc(s.category) + '</span>');
+        tags.push('<span class="tag">' + esc(s.channel) + '</span>');
+        tags.push('<span class="tag ' + (s.autoRenew ? 'ok' : 'mute') + '">' +
+          (s.autoRenew ? '自动续费' : '不自动续费') + '</span>');
+        if (d !== null && d >= 0 && d <= ALERT_DAYS) {
+          tags.push('<span class="tag warn">' + esc(daysText(d)) + '</span>');
+        } else if (d !== null && d < 0) {
+          tags.push('<span class="tag mute">' + esc(daysText(d)) + '，记得更新日期</span>');
+        }
+        if (s.unused) tags.push('<span class="tag danger">很久没用</span>');
+
+        return '<article class="sub-item' + (soon ? ' is-soon' : '') + '" data-id="' + esc(s.id) + '">' +
+          '<div class="sub-head">' +
+            '<div class="sub-name">' + esc(s.name) + '</div>' +
+            '<div class="sub-amount">' + esc(fmtMoney(s.amount)) +
+              '<span class="unit">/' + (s.cycle === 'year' ? '年' : s.cycle === 'custom' ? (toNum(s.customDays) + '天') : '月') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="sub-sub">' + esc(cycleText(s)) + ' · 下次扣费 ' + esc(s.nextDate || '未填') +
+            (d !== null ? '（' + esc(daysShort(d)) + '）' : '') + '</div>' +
+          '<div class="meta">' + tags.join('') + '</div>' +
+          (s.note ? '<div class="sub-note">' + esc(s.note) + '</div>' : '') +
+          '<div class="sub-sub">每月折算 ' + esc(fmtMoney(monthlyOf(s))) + ' · 一年 ' + esc(fmtMoney(yearlyOf(s))) + '</div>' +
+          '<div class="actions">' +
+            '<button type="button" class="btn mini" data-act="edit">编辑</button>' +
+            '<button type="button" class="btn mini" data-act="script">生成话术</button>' +
+            '<button type="button" class="btn mini" data-act="unused">' +
+              (s.unused ? '取消「很久没用」' : '标记「很久没用」') + '</button>' +
+            '<button type="button" class="btn mini danger-ghost" data-act="del">删除</button>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+    }
+
+    /* ---- 渲染：话术 ---- */
+    function renderScript() {
+      var select = $('scriptSelect');
+      var ordered = sortByMonthly(state.subs);
+      if (!ordered.length) {
+        selectedId = null;
+      } else if (!findSub(selectedId)) {
+        selectedId = ordered[0].id;
+      }
+      select.innerHTML = ordered.length
+        ? ordered.map(function (s) {
+            return '<option value="' + esc(s.id) + '">' + esc(s.name) + ' · ' + esc(fmtMoney(s.amount)) + '</option>';
+          }).join('')
+        : '<option value="">（还没有订阅）</option>';
+      if (selectedId) select.value = selectedId;
+
+      $('tplChips').innerHTML = TEMPLATES.map(function (t) {
+        return '<button type="button" class="chip" data-tpl="' + esc(t.id) + '" aria-pressed="' +
+          (t.id === currentTpl ? 'true' : 'false') + '">' + esc(t.title) + '</button>';
+      }).join('');
+
+      var sub = findSub(selectedId);
+      var text = sub ? buildScript(sub, currentTpl) : '';
+      var pre = $('scriptText');
+      if (sub) {
+        pre.textContent = text;
+        pre.dataset.raw = text;
+        $('btnCopy').disabled = false;
+        $('copyNote').textContent = '复制后直接粘到客服对话或邮件里。';
+      } else {
+        pre.textContent = '先在「订阅台账」里添加订阅，再回到这里生成话术。';
+        pre.dataset.raw = '';
+        $('btnCopy').disabled = true;
+        $('copyNote').textContent = '还没有可用的订阅。';
+      }
+    }
+
+    function renderAll() {
+      renderCheck();
+      renderList();
+      renderScript();
+      $('firstRunHint').hidden = state.subs.length > 0;
+    }
+
+    /* ---- 弹窗 ---- */
+    function openModal(sub) {
+      editingId = sub ? sub.id : null;
+      $('modalTitle').textContent = sub ? '编辑订阅' : '新增订阅';
+      $('f-name').value = sub ? sub.name : '';
+      $('f-amount').value = sub ? String(sub.amount) : '';
+      $('f-cycle').value = sub ? sub.cycle : 'month';
+      $('f-days').value = sub && sub.cycle === 'custom' ? String(sub.customDays) : '';
+      $('f-date').value = sub ? sub.nextDate : todayStr();
+      $('f-category').value = sub ? sub.category : '影音娱乐';
+      $('f-channel').value = sub ? sub.channel : '微信支付';
+      $('f-auto').checked = sub ? !!sub.autoRenew : true;
+      $('f-note').value = sub ? sub.note : '';
+      $('formError').hidden = true;
+      $('daysWrap').hidden = (sub ? sub.cycle : 'month') !== 'custom';
+      $('modal').hidden = false;
+      setTimeout(function () { $('f-name').focus(); }, 30);
+    }
+
+    function closeModal() {
+      $('modal').hidden = true;
+      editingId = null;
+    }
+
+    function showFormError(msg) {
+      var el = $('formError');
+      el.textContent = msg;
+      el.hidden = false;
+    }
+
+    function submitForm(e) {
+      e.preventDefault();
+      var name = $('f-name').value.trim();
+      var amountRaw = $('f-amount').value;
+      var amount = toNum(amountRaw);
+      var cycle = $('f-cycle').value;
+      var days = toNum($('f-days').value);
+      var date = $('f-date').value;
+
+      if (!name) return showFormError('订阅名称不能为空。');
+      if (amountRaw === '' || !(amount > 0)) return showFormError('金额要填一个大于 0 的数字。');
+      if (cycle === 'custom' && !(days >= 1)) return showFormError('自定义周期要填大于 0 的天数。');
+      if (!isValidYMD(date)) return showFormError('请选择下次扣费日期。');
+
+      var data = normalize({
+        id: editingId || uid(),
+        name: name,
+        amount: amount,
+        cycle: cycle,
+        customDays: days,
+        nextDate: date,
+        category: $('f-category').value,
+        channel: $('f-channel').value,
+        autoRenew: $('f-auto').checked,
+        unused: editingId && findSub(editingId) ? findSub(editingId).unused : false,
+        note: $('f-note').value,
+        createdAt: editingId && findSub(editingId) ? findSub(editingId).createdAt : Date.now()
+      });
+
+      if (editingId && findSub(editingId)) {
+        state.subs = state.subs.map(function (s) { return s.id === editingId ? data : s; });
+      } else {
+        state.subs = state.subs.concat([data]);
+      }
+      var wasEditing = !!editingId;
+      selectedId = data.id;
+      save();
+      closeModal();
+      renderAll();
+      toast(wasEditing ? '已保存修改。' : '已添加「' + name + '」。');
+    }
+
+    /* ---- 事件 ---- */
+    function bind() {
+      $('btnAdd').addEventListener('click', function () { openModal(null); });
+
+      $('modal').addEventListener('click', function (e) {
+        if (e.target.closest('[data-close]')) closeModal();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !$('modal').hidden) closeModal();
+      });
+
+      $('f-cycle').addEventListener('change', function () {
+        $('daysWrap').hidden = $('f-cycle').value !== 'custom';
+        if ($('f-cycle').value === 'custom' && !$('f-days').value) $('f-days').value = '90';
+      });
+
+      $('subForm').addEventListener('submit', submitForm);
+
+      $('subList').addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        var card = btn.closest('[data-id]');
+        var sub = card ? findSub(card.getAttribute('data-id')) : null;
+        if (!sub) return;
+        var act = btn.getAttribute('data-act');
+
+        if (act === 'edit') {
+          openModal(sub);
+        } else if (act === 'script') {
+          selectedId = sub.id;
+          renderScript();
+          $('scriptText').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          toast('已选中「' + sub.name + '」，往下看话术。');
+        } else if (act === 'unused') {
+          sub.unused = !sub.unused;
+          save();
+          renderAll();
+          toast(sub.unused ? '已标记「很久没用」。' : '已取消「很久没用」标记。');
+        } else if (act === 'del') {
+          if (window.confirm('确定删除「' + sub.name + '」？删除后只能靠备份恢复。')) {
+            state.subs = state.subs.filter(function (s) { return s.id !== sub.id; });
+            if (selectedId === sub.id) selectedId = null;
+            save();
+            renderAll();
+            toast('已删除。');
+          }
+        }
+      });
+
+      $('scriptSelect').addEventListener('change', function () {
+        selectedId = $('scriptSelect').value;
+        renderScript();
+      });
+
+      $('tplChips').addEventListener('click', function (e) {
+        var chip = e.target.closest('[data-tpl]');
+        if (!chip) return;
+        currentTpl = chip.getAttribute('data-tpl');
+        renderScript();
+      });
+
+      $('btnCopy').addEventListener('click', function () {
+        var text = $('scriptText').dataset.raw || '';
+        if (!text) { toast('还没有可复制的话术。'); return; }
+        copyText(text).then(function (ok) {
+          toast(ok ? '已复制，去粘贴给客服吧。' : '复制失败，请长按文字手动选择复制。');
+        });
+      });
+
+      $('btnExportJson').addEventListener('click', function () {
+        download('订阅账单备份_' + todayStr() + '.json', buildBackup(state.subs), 'application/json;charset=utf-8');
+        toast('已导出 JSON 备份。');
+      });
+
+      $('btnExportCsv').addEventListener('click', function () {
+        if (!state.subs.length) { toast('还没有数据可以导出。'); return; }
+        download('订阅账单_' + todayStr() + '.csv', toCSV(sortByMonthly(state.subs)), 'text/csv;charset=utf-8');
+        toast('已导出 CSV。');
+      });
+
+      $('btnImportJson').addEventListener('click', function () {
+        $('fileInput').value = '';
+        $('fileInput').click();
+      });
+
+      $('fileInput').addEventListener('change', function () {
+        var file = $('fileInput').files && $('fileInput').files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          var res = parseBackup(reader.result);
+          if (!res.ok) { toast('导入失败：' + res.error); return; }
+          var msg = '导入会覆盖当前 ' + state.subs.length + ' 条记录，换成备份里的 ' + res.count + ' 条。继续吗？';
+          if (!window.confirm(msg)) return;
+          state.subs = res.subs;
+          state.seeded = true;
+          selectedId = null;
+          save();
+          renderAll();
+          toast('已导入 ' + res.count + ' 条记录。');
+        };
+        reader.onerror = function () { toast('读取文件失败。'); };
+        reader.readAsText(file, 'utf-8');
+      });
+
+      $('btnSamples').addEventListener('click', function () {
+        if (state.subs.length && !window.confirm('载入示例会覆盖当前的 ' + state.subs.length + ' 条记录，继续吗？')) return;
+        state.subs = sampleSubs();
+        state.seeded = true;
+        selectedId = null;
+        save();
+        renderAll();
+        toast('已载入 3 条示例数据。');
+      });
+
+      $('btnClear').addEventListener('click', function () {
+        if (!state.subs.length) { toast('本来就是空的。'); return; }
+        if (!window.confirm('清空全部 ' + state.subs.length + ' 条订阅记录？此操作不可撤销，建议先导出 JSON 备份。')) return;
+        state.subs = [];
+        state.seeded = true;
+        selectedId = null;
+        save();
+        renderAll();
+        toast('已清空。');
+      });
+    }
+
+    load();
+    bind();
+    renderAll();
+  }
+
+  boot();
+
+  return {
+    STORAGE_KEY: STORAGE_KEY,
+    DAYS_PER_MONTH: DAYS_PER_MONTH,
+    ALERT_DAYS: ALERT_DAYS,
+    TEMPLATES: TEMPLATES,
+    monthlyOf: monthlyOf,
+    yearlyOf: yearlyOf,
+    summarize: summarize,
+    sortByMonthly: sortByMonthly,
+    upcoming: upcoming,
+    zombies: zombies,
+    ledgerOrder: ledgerOrder,
+    daysUntil: daysUntil,
+    daysText: daysText,
+    daysShort: daysShort,
+    todayStr: todayStr,
+    addDays: addDays,
+    isValidYMD: isValidYMD,
+    normalize: normalize,
+    buildBackup: buildBackup,
+    parseBackup: parseBackup,
+    toCSV: toCSV,
+    buildScript: buildScript,
+    templateById: templateById,
+    sampleSubs: sampleSubs,
+    fmtMoney: fmtMoney,
+    cycleText: cycleText
+  };
+});
+</script>
+</body>
+</html>
